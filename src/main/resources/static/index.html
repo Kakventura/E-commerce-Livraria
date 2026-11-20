@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Livraria – Efetuar Pedido</title>
+<style>
+:root{--bg:#f4f1ec;--card:#fff;--txt:#22201d;--mut:#6e6a64;--bd:#e4dfd7;--pri:#2f5d50;--ok:#1f7a45;--err:#b3261e;--warn:#b8741a}
+@media (prefers-color-scheme:dark){:root{--bg:#161513;--card:#201f1c;--txt:#ece8e1;--mut:#a09a90;--bd:#35332e;--pri:#5fb394;--ok:#4cc27f;--err:#ff8a80;--warn:#e0a24a}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--txt)}
+header{background:var(--pri);color:#fff;padding:12px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+header h1{margin:0;font-size:19px}nav{display:flex;gap:6px}nav button{background:rgba(255,255,255,.18)}nav button.on{background:#fff;color:#22201d}
+#quem{margin-left:auto;font-size:14px}
+main{max-width:1150px;margin:0 auto;padding:18px 14px;display:grid;gap:16px}
+section{display:none}section.on{display:grid;gap:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px}
+h2{font-size:16px;margin:0 0 10px}h3{font-size:14px;margin:0 0 6px}
+button{font:inherit;cursor:pointer;border:0;border-radius:7px;padding:7px 12px;background:var(--pri);color:#fff;font-weight:600}
+button.g{background:transparent;color:var(--pri);border:1px solid var(--pri)}button:disabled{opacity:.45;cursor:not-allowed}
+input,select{font:inherit;padding:7px;border:1px solid var(--bd);border-radius:7px;background:var(--bg);color:var(--txt);min-width:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}.row input{flex:1 1 120px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:6px;border-bottom:1px solid var(--bd);vertical-align:top}
+.b{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:700;background:var(--bd)}
+.OK,.CONFIRMADO,.FINALIZADO,.DISPONIVEL{color:var(--ok)}.NOK,.CANCELADO,.INDISPONIVEL,.FORA_DE_CIRCULACAO{color:var(--err)}.EM_PROCESSAMENTO,.EM_TRANSPORTE{color:var(--warn)}
+pre{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;font-size:12px;overflow:auto;max-height:260px;margin:6px 0 0;white-space:pre-wrap}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:850px){.two{grid-template-columns:1fr}}
+.mut{color:var(--mut);font-size:13px}
+</style>
+</head>
+<body>
+<header><h1>📚 Livraria – Efetuar Pedido</h1>
+<nav><button data-t="loja" class="on">Loja (Cliente)</button><button data-t="func">Funcionário</button><button data-t="testes">Roteiro de testes</button></nav>
+<div id="quem">Não autenticado</div></header>
+<main>
+
+<section id="loja" class="on">
+ <div class="two">
+  <div class="card"><h2>Cliente</h2>
+   <div class="row"><input id="cNome" placeholder="Nome (só no cadastro)"></div>
+   <div class="row"><input id="cEmail" placeholder="E-mail" value="ana@email.com"><input id="cSenha" type="password" placeholder="Senha (mín. 4)" value="1234"></div>
+   <div class="row"><input id="cRua" placeholder="Rua" value="Rua das Flores"><input id="cNum" placeholder="Nº" value="100" style="max-width:70px"><input id="cCid" placeholder="Cidade" value="São Paulo"><input id="cUf" placeholder="UF" value="SP" style="max-width:60px"><input id="cCep" placeholder="CEP" value="01000-000"></div>
+   <div class="row"><button id="bCad">Cadastrar</button><button id="bLogin" class="g">Entrar</button><button id="bSair" class="g">Sair</button></div>
+  </div>
+  <div class="card"><h2>Carrinho e pagamento</h2><div id="cart" class="mut">Carrinho vazio</div>
+   <div class="row"><select id="pForma"><option value="CARTAO">Cartão de crédito</option><option value="PIX">Pix (à vista)</option></select>
+    <select id="pParc"><option value="1">À vista (3% off)</option><option value="2">2x sem juros</option><option value="3">3x sem juros</option></select></div>
+   <div class="row"><input id="pCartao" placeholder="Nº do cartão" value="4111111111111111"><input id="pTit" placeholder="Titular" value="Ana"></div>
+   <div class="mut">Cartão 4111111111111111 = aprovado · 4111111111111112 = recusado (Luhn). Endereço de entrega: usa o padrão do cliente.</div>
+   <div class="row"><button id="bPedido">Finalizar pedido</button><button id="bLimpa" class="g">Limpar carrinho</button></div>
+  </div>
+ </div>
+ <div class="card"><h2>Catálogo</h2><table id="tCat"></table></div>
+ <div class="card"><h2>Meus pedidos <button class="g" id="bRec" style="float:right">Atualizar</button></h2><div id="pedidos" class="mut">Entre para ver seus pedidos.</div></div>
+ <div class="card"><h3>Última resposta da API</h3><pre id="resp">—</pre></div>
+</section>
+
+<section id="func">
+ <div class="card"><h2>Cadastrar livro (Manter Livro)</h2>
+  <div class="row"><input id="lIsbn" placeholder="ISBN"><input id="lTit" placeholder="Título"><input id="lPreco" type="number" placeholder="Preço" step="0.01"><input id="lEst" type="number" placeholder="Estoque"></div>
+  <div class="row"><select id="lFmt"><option value="CAPA_DURA">Capa dura (0%)</option><option value="BROCHURA">Brochura (5%)</option><option value="DIGITAL">Digital (10%)</option></select>
+   <select id="lSt"><option>DISPONIVEL</option><option>INDISPONIVEL</option><option>FORA_DE_CIRCULACAO</option></select><button id="bLivro">Cadastrar</button></div></div>
+ <div class="card"><h2>Estoque e status <button class="g" id="bRecF" style="float:right">Atualizar</button></h2><table id="tFunc"></table></div>
+ <div class="card"><h2>Notificações ao funcionário (RN03 – estoque mínimo ≤ 2)</h2><div id="notif" class="mut">—</div></div>
+</section>
+
+<section id="testes">
+ <div class="card"><h2>Roteiro de testes de sistema – 14 casos da planilha</h2>
+  <p class="mut">Cada caso cria seu próprio cliente e livros (preço R$ 100,00) pela API real do sistema, executa o fluxo e compara com a saída esperada. Valores comparados sem frete. Use "Executar todos" na gravação do vídeo e copie o resultado para a planilha.</p>
+  <div class="row"><button id="bTodos">Executar todos</button><button class="g" id="bCopia">Copiar Status (para a planilha)</button><span id="sumario" class="mut"></span></div>
+  <table id="tTestes"></table></div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id), brl=n=>Number(n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let sessao=null; const cart=new Map(); let livros=[];
+
+async function api(m,p,body,tk){
+  const h={}; if(body!==undefined)h['Content-Type']='application/json'; if(tk)h['Authorization']='Bearer '+tk;
+  try{const r=await fetch(p,{method:m,headers:h,body:body!==undefined?JSON.stringify(body):undefined});
+    let b=null;try{b=await r.json()}catch(e){} return{status:r.status,ok:r.ok,body:b};
+  }catch(e){return{status:0,ok:false,body:{mensagem:'Sem conexão. A aplicação está rodando?'}}}
+}
+const mostra=r=>{$('resp').textContent='HTTP '+r.status+'\n'+JSON.stringify(r.body,null,2);return r};
+
+// ---------- abas ----------
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button,section').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');$(b.dataset.t).classList.add('on');
+  if(b.dataset.t==='func')recarregaFunc();});
+
+// ---------- cliente ----------
+const endCli=()=>({logradouro:$('cRua').value,numero:$('cNum').value,cidade:$('cCid').value,uf:$('cUf').value,cep:$('cCep').value});
+$('bCad').onclick=async()=>mostra(await api('POST','/clientes',{nome:$('cNome').value,email:$('cEmail').value,senha:$('cSenha').value,enderecoPadrao:endCli()}));
+$('bLogin').onclick=async()=>{const r=mostra(await api('POST','/auth/login',{email:$('cEmail').value,senha:$('cSenha').value}));
+  if(r.ok){sessao=r.body;$('quem').textContent='👤 '+sessao.nome;recarregaPedidos();}};
+$('bSair').onclick=()=>{sessao=null;$('quem').textContent='Não autenticado';$('pedidos').textContent='Entre para ver seus pedidos.';};
+
+// ---------- catálogo / carrinho ----------
+async function recarregaLivros(){const r=await api('GET','/livros');livros=r.body||[];
+  $('tCat').innerHTML='<tr><th>Título</th><th>Formato</th><th>Status</th><th>Preço</th><th>Estoque</th><th></th></tr>'+livros.map(l=>
+   `<tr><td>${esc(l.titulo)}<br><span class="mut">${esc(l.isbn)}</span></td><td>${l.formato}</td><td><b class="${l.status}">${l.status}</b></td>
+    <td>${brl(l.precoFinal)}${l.formato!=='CAPA_DURA'?`<br><span class="mut">base ${brl(l.preco)}</span>`:''}</td><td>${l.estoque}</td>
+    <td><button data-add="${esc(l.isbn)}">Adicionar</button></td></tr>`).join('');
+  document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{cart.set(b.dataset.add,(cart.get(b.dataset.add)||0)+1);desenhaCart();});}
+function desenhaCart(){
+  if(!cart.size){$('cart').innerHTML='<span class="mut">Carrinho vazio</span>';return;}
+  let sub=0;$('cart').innerHTML='<table>'+[...cart].map(([i,q])=>{const l=livros.find(x=>x.isbn===i);if(l)sub+=l.precoFinal*q;
+   return`<tr><td>${esc(l?l.titulo:i)}</td><td><input type="number" min="1" value="${q}" style="width:60px" data-q="${esc(i)}"></td><td>${l?brl(l.precoFinal*q):''}</td><td><button class="g" data-rm="${esc(i)}">✕</button></td></tr>`}).join('')+`</table><div>Subtotal: <b>${brl(sub)}</b> <span class="mut">(desconto de pagamento e frete são calculados pelo sistema)</span></div>`;
+  document.querySelectorAll('[data-q]').forEach(e=>e.onchange=()=>{cart.set(e.dataset.q,parseInt(e.value)||1);desenhaCart();});
+  document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{cart.delete(b.dataset.rm);desenhaCart();});}
+$('bLimpa').onclick=()=>{cart.clear();desenhaCart();};
+$('pForma').onchange=()=>{const pix=$('pForma').value==='PIX';$('pParc').disabled=pix;$('pCartao').disabled=pix;if(pix)$('pParc').value='1';};
+const pagForm=()=>({forma:$('pForma').value,numeroCartao:$('pForma').value==='CARTAO'?$('pCartao').value:null,titular:$('pTit').value,parcelas:parseInt($('pParc').value)});
+$('bPedido').onclick=async()=>{
+  const r=mostra(await api('POST','/pedidos',{itens:[...cart].map(([isbn,quantidade])=>({isbn,quantidade})),pagamento:pagForm()},sessao&&sessao.token));
+  if(r.status===201){cart.clear();desenhaCart();}
+  recarregaLivros();if(sessao)recarregaPedidos();};
+
+// ---------- meus pedidos ----------
+async function recarregaPedidos(){
+  if(!sessao)return;const r=await api('GET','/pedidos',undefined,sessao.token);
+  $('pedidos').innerHTML=(r.body||[]).map(p=>`<div style="border-top:1px solid var(--bd);padding:8px 0">
+   <b>Pedido #${p.pedidoId}</b> <b class="${p.status}">${p.status}</b> · ${p.formaPagamento||'-'} ${p.parcelas}x · tentativas restantes: ${p.tentativasRestantes}<br>
+   ${p.itens.map(i=>`${i.quantidade}× ${esc(i.titulo)} (${brl(i.precoUnitario)})`).join(', ')}<br>
+   Subtotal ${brl(p.subtotal)} − desconto ${brl(p.desconto)} + frete ${brl(p.frete)} = <b>${brl(p.total)}</b><br>
+   ${p.status==='EM_PROCESSAMENTO'?`<button data-a="pagamento" data-id="${p.pedidoId}">Pagar novamente</button> <button class="g" data-a="cancelar" data-id="${p.pedidoId}">Cancelar</button>`:''}
+   ${p.status==='CONFIRMADO'?`<button class="g" data-a="enviar" data-id="${p.pedidoId}">Enviar</button>`:''}
+   ${p.status==='EM_TRANSPORTE'?`<button class="g" data-a="receber" data-id="${p.pedidoId}">Receber (finalizar)</button>`:''}</div>`).join('')||'<span class="mut">Nenhum pedido.</span>';
+  document.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a,id=b.dataset.id;
+   mostra(a==='pagamento'?await api('POST',`/pedidos/${id}/pagamento`,pagForm(),sessao.token):await api('PATCH',`/pedidos/${id}/${a}`,undefined,sessao.token));
+   recarregaPedidos();recarregaLivros();});}
+$('bRec').onclick=recarregaPedidos;
+
+// ---------- funcionário ----------
+$('bLivro').onclick=async()=>{mostra(await api('POST','/livros',{isbn:$('lIsbn').value,titulo:$('lTit').value,preco:parseFloat($('lPreco').value),estoque:$('lEst').value===''?null:parseInt($('lEst').value),formato:$('lFmt').value,status:$('lSt').value}));recarregaFunc();};
+async function recarregaFunc(){await recarregaLivros();
+  $('tFunc').innerHTML='<tr><th>Livro</th><th>Estoque</th><th>Status (RN01)</th><th></th></tr>'+livros.map(l=>`<tr><td>${esc(l.titulo)}</td><td>${l.estoque}</td>
+   <td><select data-st="${esc(l.isbn)}">${['DISPONIVEL','INDISPONIVEL','FORA_DE_CIRCULACAO'].map(s=>`<option ${s===l.status?'selected':''}>${s}</option>`).join('')}</select></td>
+   <td><button class="g" data-rep="${esc(l.isbn)}">Repor estoque</button></td></tr>`).join('');
+  document.querySelectorAll('[data-st]').forEach(s=>s.onchange=async()=>{mostra(await api('PATCH',`/livros/${encodeURIComponent(s.dataset.st)}/status`,{status:s.value}));recarregaFunc();});
+  document.querySelectorAll('[data-rep]').forEach(b=>b.onclick=async()=>{const q=parseInt(prompt('Quantidade a repor:','5'));if(!q)return;mostra(await api('PATCH',`/livros/${encodeURIComponent(b.dataset.rep)}/estoque`,{quantidade:q}));recarregaFunc();});
+  const n=await api('GET','/notificacoes');
+  $('notif').innerHTML=(n.body||[]).map(x=>`<div>🔔 ${esc(x.mensagem)} <span class="mut">${esc(x.data)}</span></div>`).join('')||'Nenhuma notificação.';}
+$('bRecF').onclick=recarregaFunc;
+
+// ================= ROTEIRO DE TESTES (caixa-preta, via API) =================
+const OK_CARD='4111111111111111',RUIM_CARD='4111111111111112';let seq=Date.now()%1e7,cont=0;
+const T=()=>{const log=[];let ok=true;return{log,get ok(){return ok},
+  chk(d,real,esp){const p=String(real)===String(esp);if(!p)ok=false;log.push((p?'✔ ':'✘ ')+d+': obtido='+real+(p?'':'  ESPERADO='+esp));},
+  nota(s){log.push('• '+s);}}};
+const m2=x=>Number(x).toFixed(2);
+const pg=(forma='CARTAO',parcelas=1,cartao=OK_CARD)=>({forma,parcelas,numeroCartao:forma==='CARTAO'?cartao:null,titular:'Teste'});
+async function ctx(){const id=(++cont)+'_'+seq,email=`t${id}@teste.com`;
+  await api('POST','/clientes',{nome:'Teste '+id,email,senha:'1234',enderecoPadrao:{logradouro:'Rua A',numero:'1',cidade:'São Paulo',uf:'SP',cep:'01000-000'}});
+  const l=await api('POST','/auth/login',{email,senha:'1234'});if(!l.ok)throw new Error('login falhou: '+JSON.stringify(l.body));
+  return{tk:l.body.token,n:id};}
+async function livro(c,{formato='CAPA_DURA',estoque=10,status='DISPONIVEL'}={}){const isbn=`T${c.n}_${++cont}`;
+  const r=await api('POST','/livros',{isbn,titulo:'Livro '+isbn,preco:100,estoque,formato,status});if(!r.ok)throw new Error('livro: '+JSON.stringify(r.body));return isbn;}
+const it=(...i)=>i.map(isbn=>({isbn,quantidade:1}));
+const ped=(c,itens,pagamento)=>api('POST','/pedidos',{itens,pagamento},c&&c.tk);
+const get=(c,id)=>api('GET','/pedidos/'+id,undefined,c.tk);
+const est=async i=>(await api('GET','/livros')).body.find(l=>l.isbn===i).estoque;
+async function ciclo(t,c,id){let r=await api('PATCH',`/pedidos/${id}/enviar`);t.chk('enviar → status',r.body.status,'EM_TRANSPORTE');
+  r=await api('PATCH',`/pedidos/${id}/receber`);t.chk('receber → status',r.body.status,'FINALIZADO');
+  r=await get(c,id);t.chk('visualizar pedido',r.body.status,'FINALIZADO');}
+async function venda(t,c,itens,pagamento,semFrete){const r=await ped(c,itens,pagamento);
+  t.chk('POST /pedidos HTTP',r.status,201);t.chk('status do pedido',r.body.status,'CONFIRMADO');
+  t.chk('total sem frete',m2(r.body.total-r.body.frete),semFrete);t.nota('frete='+r.body.frete+' total='+r.body.total);return r;}
+async function recusa(t,c,i,esperaRestantes){const r=await ped(c,it(i),pg('CARTAO',1,RUIM_CARD));
+  t.chk('1ª tentativa: HTTP',r.status,422);t.chk('tentativas restantes',r.body.tentativasRestantes,esperaRestantes);
+  const s=await get(c,r.body.pedidoId);t.chk('status após recusa',s.body.status,'EM_PROCESSAMENTO');t.chk('estoque inalterado',await est(i),10);return r.body.pedidoId;}
+
+const CTS=[
+{id:'#01',nome:'Fluxo principal (capa dura, cartão à vista)',gfc:'C1',ge:'ST1',run:async t=>{const c=await ctx(),i=await livro(c);
+  const r=await venda(t,c,it(i),pg(),'97.00');t.chk('estoque após venda',await est(i),9);await ciclo(t,c,r.body.pedidoId);}},
+{id:'#02',nome:'Pagamento recusado e depois aprovado',gfc:'C9',ge:'ST1',run:async t=>{const c=await ctx(),i=await livro(c);
+  const id=await recusa(t,c,i,2);const r=await api('POST',`/pedidos/${id}/pagamento`,pg(),c.tk);
+  t.chk('nova tentativa: HTTP',r.status,200);t.chk('status',r.body.status,'CONFIRMADO');t.chk('estoque',await est(i),9);await ciclo(t,c,id);}},
+{id:'#03',nome:'Estoque mínimo notifica funcionário (RN03)',gfc:'C1',ge:'ST2',run:async t=>{const c=await ctx(),i=await livro(c,{estoque:3});
+  const r=await venda(t,c,it(i),pg(),'97.00');t.chk('estoque atual',await est(i),2);
+  const n=(await api('GET','/notificacoes')).body;t.chk('notificação criada',n.some(x=>x.mensagem.includes(i)),true);await ciclo(t,c,r.body.pedidoId);}},
+{id:'#04',nome:'Pix à vista (8%)',gfc:'C8',ge:'ST1',run:async t=>{const c=await ctx(),i=await livro(c);
+  const r=await venda(t,c,it(i),pg('PIX'),'92.00');await ciclo(t,c,r.body.pedidoId);}},
+{id:'#05',nome:'Brochura, cartão em 3x (5% do formato)',gfc:'C7',ge:'ST1',run:async t=>{const c=await ctx(),i=await livro(c,{formato:'BROCHURA'});
+  const r=await venda(t,c,it(i),pg('CARTAO',3),'95.00');await ciclo(t,c,r.body.pedidoId);}},
+{id:'#06',nome:'Brochura, cartão à vista (5% + 3%)',gfc:'C1',ge:'ST1',run:async t=>{const c=await ctx(),i=await livro(c,{formato:'BROCHURA'});
+  const r=await venda(t,c,it(i),pg(),'92.15');await ciclo(t,c,r.body.pedidoId);}},
+{id:'#07',nome:'Livro digital, cartão à vista (10% + 3%)',gfc:'C1',ge:'ST1',run:async t=>{const c=await ctx(),i=await livro(c,{formato:'DIGITAL'});
+  const r=await venda(t,c,it(i),pg(),'87.30');await ciclo(t,c,r.body.pedidoId);}},
+{id:'#08',nome:'Cliente cancela (EM_PROCESSAMENTO → CANCELADO)',gfc:'C10',ge:'ST3',run:async t=>{const c=await ctx(),i=await livro(c);
+  const id=await recusa(t,c,i,2);const r=await api('PATCH',`/pedidos/${id}/cancelar`,undefined,c.tk);
+  t.chk('cancelar: status',r.body.status,'CANCELADO');t.chk('visualizar',(await get(c,id)).body.status,'CANCELADO');
+  t.chk('cancelar de novo: HTTP',(await api('PATCH',`/pedidos/${id}/cancelar`,undefined,c.tk)).status,409);t.chk('estoque',await est(i),10);}},
+{id:'#09',nome:'Pagamento recusado, tentativas esgotadas',gfc:'C10',ge:'ST4',run:async t=>{const c=await ctx(),i=await livro(c);
+  const id=await recusa(t,c,i,2);let r=await api('POST',`/pedidos/${id}/pagamento`,pg('CARTAO',1,RUIM_CARD),c.tk);t.chk('2ª recusa: restantes',r.body.tentativasRestantes,1);
+  r=await api('POST',`/pedidos/${id}/pagamento`,pg('CARTAO',1,RUIM_CARD),c.tk);t.chk('3ª recusa: pedidoCancelado',r.body.pedidoCancelado,true);
+  t.chk('status final',(await get(c,id)).body.status,'CANCELADO');t.chk('estoque',await est(i),10);}},
+{id:'#10',nome:'Livro indisponível / fora de circulação (RN01)',gfc:'C4',ge:'ST0',run:async t=>{const c=await ctx();
+  const a=await livro(c,{status:'INDISPONIVEL'}),b=await livro(c,{status:'FORA_DE_CIRCULACAO'});
+  t.chk('indisponível: HTTP',(await ped(c,it(a),pg())).status,409);t.chk('fora de circulação: HTTP',(await ped(c,it(b),pg())).status,409);
+  t.chk('pedidos criados',(await api('GET','/pedidos',undefined,c.tk)).body.length,0);}},
+{id:'#11',nome:'Cliente não autenticado',gfc:'C2',ge:'ST0',run:async t=>{const c=await ctx(),i=await livro(c);
+  t.chk('sem token: HTTP',(await ped(null,it(i),pg())).status,401);
+  t.chk('token inválido: HTTP',(await ped({tk:'invalido'},it(i),pg())).status,401);t.chk('estoque',await est(i),10);}},
+{id:'#12',nome:'Carrinho vazio',gfc:'C3',ge:'ST0',run:async t=>{const c=await ctx();
+  const r=await ped(c,[],pg());t.chk('HTTP',r.status,400);t.nota(r.body.mensagem);
+  t.chk('pedidos criados',(await api('GET','/pedidos',undefined,c.tk)).body.length,0);}},
+{id:'#13',nome:'Estoque insuficiente',gfc:'C5',ge:'ST0',run:async t=>{const c=await ctx(),i=await livro(c,{estoque:1});
+  const r=await ped(c,[{isbn:i,quantidade:2}],pg());t.chk('HTTP',r.status,409);t.nota(r.body.mensagem);
+  t.chk('pedidos criados',(await api('GET','/pedidos',undefined,c.tk)).body.length,0);t.chk('estoque',await est(i),1);}},
+{id:'#14',nome:'Mais de um item (capa dura + brochura)',gfc:'C6',ge:'ST1',run:async t=>{const c=await ctx(),a=await livro(c),b=await livro(c,{formato:'BROCHURA'});
+  const r=await venda(t,c,it(a,b),pg(),'189.15');t.chk('qtd de itens',r.body.itens.length,2);await ciclo(t,c,r.body.pedidoId);}}
+];
+const res={};
+function desenhaTestes(){$('tTestes').innerHTML='<tr><th>CT</th><th>Cenário</th><th>GFC / GE</th><th>Status</th><th></th></tr>'+CTS.map(x=>{const r=res[x.id];
+  return`<tr><td>${x.id}</td><td>${x.nome}${r?`<details><summary>detalhes</summary><pre>${esc(r.log.join('\n'))}</pre></details>`:''}</td><td>${x.gfc} / ${x.ge}</td>
+  <td><b class="${r?r.st:''}">${r?r.st:'NT'}</b></td><td><button class="g" data-ct="${x.id}">Executar</button></td></tr>`}).join('');
+  document.querySelectorAll('[data-ct]').forEach(b=>b.onclick=()=>rodar(CTS.find(x=>x.id===b.dataset.ct)));
+  const v=s=>Object.values(res).filter(r=>r.st===s).length;$('sumario').textContent=`OK: ${v('OK')} · NOK: ${v('NOK')} · NT: ${CTS.length-v('OK')-v('NOK')}`;}
+async function rodar(ct){const t=T();try{await ct.run(t);}catch(e){t.chk('erro inesperado',e.message,'sem erro');}
+  res[ct.id]={st:t.ok?'OK':'NOK',log:t.log};desenhaTestes();}
+$('bTodos').onclick=async()=>{for(const ct of CTS)await rodar(ct);recarregaLivros();};
+$('bCopia').onclick=()=>{navigator.clipboard.writeText(CTS.map(x=>x.id+'\t'+(res[x.id]?res[x.id].st:'NT')).join('\n'));};
+
+desenhaTestes();recarregaLivros();desenhaCart();
+</script>
+</body>
+</html>
