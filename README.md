@@ -35,7 +35,7 @@ Pagamento recusado mantém o pedido EM_PROCESSAMENTO; após 3 recusas ele é CAN
 | POST | `/pedidos/{id}/pagamento` (nova tentativa) · PATCH `/pedidos/{id}/cancelar` | Bearer |
 | PATCH | `/pedidos/{id}/enviar` · `/pedidos/{id}/receber` | – (logística) |
 
-Pagamento: cartão `4111111111111111` aprovado; `4111111111111112` recusado (Luhn).
+Pagamento: cartão `4111111111111111` aprovado; `4111111111111112` recusado ( Luhn)
 
 ## Testes pela própria tela
 Abra http://localhost:8080 → aba **Roteiro de testes**: os 14 casos da planilha (#01–#14) rodam contra a API real,
